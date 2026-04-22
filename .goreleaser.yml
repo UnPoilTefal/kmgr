@@ -79,12 +79,12 @@ dockers:
     dockerfile: Dockerfile
 
 docker_manifests:
-  - name_template: "ghcr.io/UnPoilTefal/kmgr:{{ .Tag }}"
+  - name_template: "ghcr.io/unpoiltefal/kmgr:{{ .Tag }}"
     image_templates:
-      - "ghcr.io/UnPoilTefal/kmgr:{{ .Tag }}-amd64"
-      - "ghcr.io/UnPoilTefal/kmgr:{{ .Tag }}-arm64"
+      - "ghcr.io/unpoiltefal/kmgr:{{ .Tag }}-amd64"
+      - "ghcr.io/unpoiltefal/kmgr:{{ .Tag }}-arm64"
 
-  - name_template: "ghcr.io/UnPoilTefal/kmgr:latest"
+  - name_template: "ghcr.io/unpoiltefal/kmgr:latest"
     image_templates:
-      - "ghcr.io/UnPoilTefal/kmgr:{{ .Tag }}-amd64"
-      - "ghcr.io/UnPoilTefal/kmgr:{{ .Tag }}-arm64"
+      - "ghcr.io/unpoiltefal/kmgr:{{ .Tag }}-amd64"
+      - "ghcr.io/unpoiltefal/kmgr:{{ .Tag }}-arm64"
