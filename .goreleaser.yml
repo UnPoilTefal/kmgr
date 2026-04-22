@@ -1,0 +1,90 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: kmgr
+    main: main.go          # ← adapte au point d'entrée de ta CLI
+    binary: kmgr
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .Commit }}
+      - -X main.date={{ .Date }}
+
+archives:
+  - id: default
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - Merge pull request
+      - Merge branch
+
+# ─── Homebrew Tap ────────────────────────────────────────────────────────────
+brews:
+  - name: kmgr
+    repository:
+      owner: UnPoilTefal                 # ← ton org/user GitHub
+      name: homebrew-tap            # ← ton repo tap (doit exister)
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: "https://github.com/UnPoilTefal/kmgr"
+    description: "Description courte de ta CLI"
+    license: "MIT"
+    test: |
+      system "#{bin}/kmgr --version"
+    install: |
+      bin.install "kmgr"
+
+# ─── Docker ──────────────────────────────────────────────────────────────────
+dockers:
+  - image_templates:
+      - "ghcr.io/UnPoilTefal/kmgr:{{ .Tag }}-amd64"
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+    dockerfile: Dockerfile
+
+  - image_templates:
+      - "ghcr.io/UnPoilTefal/kmgr:{{ .Tag }}-arm64"
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+    goarch: arm64
+    dockerfile: Dockerfile
+
+docker_manifests:
+  - name_template: "ghcr.io/UnPoilTefal/kmgr:{{ .Tag }}"
+    image_templates:
+      - "ghcr.io/UnPoilTefal/kmgr:{{ .Tag }}-amd64"
+      - "ghcr.io/UnPoilTefal/kmgr:{{ .Tag }}-arm64"
+
+  - name_template: "ghcr.io/UnPoilTefal/kmgr:latest"
+    image_templates:
+      - "ghcr.io/UnPoilTefal/kmgr:{{ .Tag }}-amd64"
+      - "ghcr.io/UnPoilTefal/kmgr:{{ .Tag }}-arm64"
