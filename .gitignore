@@ -1,0 +1,34 @@
+# Binaries
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Build artifacts
+/kmgr
+/kcfg
+
+# Go
+vendor/
+*.mod.tidy
+*.sum.backup
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test coverage
+*.cover
+*.out
+*.test
+
+# Temporary files
+.tmp/
+*.bak
