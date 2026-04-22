@@ -276,7 +276,7 @@ func checkContext(mergedPath, ctxName string) ContextCheck {
 		r.ReachErr = err.Error()
 		return r
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	r.Reachable = true
 
 	// Sonde 2 — authentification : /api/v1 exige des credentials valides.
@@ -285,7 +285,7 @@ func checkContext(mergedPath, ctxName string) ContextCheck {
 		r.AuthErr = err.Error()
 		return r
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if resp.StatusCode == 200 {
 		r.Authenticated = true
 	} else {

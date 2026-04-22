@@ -26,7 +26,7 @@ func writeKubeconfig(t *testing.T, ctx, cluster, user, server string) string {
 	if _, err := f.WriteString(content); err != nil {
 		t.Fatal(err)
 	}
-	f.Close()
+	_ = f.Close()
 	return f.Name()
 }
 
@@ -97,8 +97,8 @@ func TestValidateKubeconfig(t *testing.T) {
 
 	t.Run("invalid yaml", func(t *testing.T) {
 		f, _ := os.CreateTemp(t.TempDir(), "bad-*.yaml")
-		f.WriteString("not: valid: kubeconfig: [\n")
-		f.Close()
+		_, _ = f.WriteString("not: valid: kubeconfig: [\n")
+		_ = f.Close()
 		if err := config.ValidateKubeconfig(f.Name()); err == nil {
 			t.Error("expected error for invalid yaml")
 		}

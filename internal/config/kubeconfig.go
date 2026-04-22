@@ -101,7 +101,7 @@ func pruneBackups(backupDir, prefix string, keep int) {
 	// filepath.Glob returns sorted results; the timestamp format ensures
 	// lexicographic order == chronological order.
 	for _, old := range matches[:len(matches)-keep] {
-		os.Remove(old)
+		_ = os.Remove(old)
 	}
 }
 
@@ -254,8 +254,8 @@ func probeContext(cfg *clientcmdapi.Config, ctxName string) (reachable, authenti
 	if err != nil {
 		return false, false
 	}
-	defer os.Remove(tmp.Name())
-	tmp.Close()
+	defer func() { _ = os.Remove(tmp.Name()) }()
+	_ = tmp.Close()
 
 	if err := clientcmd.WriteToFile(*cfg, tmp.Name()); err != nil {
 		return false, false
@@ -270,6 +270,7 @@ func probeContext(cfg *clientcmdapi.Config, ctxName string) (reachable, authenti
 	if err != nil {
 		return false, false
 	}
+
 	restConfig.Timeout = 5 * time.Second
 
 	transport, err := rest.TransportFor(restConfig)
@@ -283,14 +284,14 @@ func probeContext(cfg *clientcmdapi.Config, ctxName string) (reachable, authenti
 	if err != nil {
 		return false, false
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 
 	// Sonde 2 — authentification.
 	resp, err = httpClient.Get(restConfig.Host + "/api/v1")
 	if err != nil {
 		return true, false
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	return true, resp.StatusCode == 200
 }
 
@@ -380,14 +381,14 @@ func TestConnectivity() ConnectivityResult {
 	if err != nil {
 		return ConnectivityResult{ReachErr: err}
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 
 	// Sonde 2 — authentification.
 	resp, err = httpClient.Get(restConfig.Host + "/api/v1")
 	if err != nil {
 		return ConnectivityResult{Reachable: true, AuthErr: err}
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return ConnectivityResult{
 			Reachable: true,

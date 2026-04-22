@@ -77,7 +77,7 @@ func runImport(_ *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		defer os.Remove(tmp)
+		defer func() { _ = os.Remove(tmp) }()
 		srcFile = tmp
 		info("Contenu du clipboard écrit dans un fichier temporaire")
 	} else if importStdin {
@@ -85,7 +85,7 @@ func runImport(_ *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		defer os.Remove(tmp)
+		defer func() { _ = os.Remove(tmp) }()
 		srcFile = tmp
 		info("Contenu stdin écrit dans un fichier temporaire")
 	} else {
@@ -162,11 +162,11 @@ func writeStdinToTemp() (string, error) {
 		return "", err
 	}
 	if _, err := tmp.Write(data); err != nil {
-		tmp.Close()
-		os.Remove(tmp.Name())
+		_ = tmp.Close()
+		_ = os.Remove(tmp.Name())
 		return "", err
 	}
-	tmp.Close()
+	_ = tmp.Close()
 	return tmp.Name(), nil
 }
 
@@ -182,10 +182,10 @@ func writeClipboardToTemp() (string, error) {
 		return "", err
 	}
 	if _, err := tmp.WriteString(content); err != nil {
-		tmp.Close()
-		os.Remove(tmp.Name())
+		_ = tmp.Close()
+		_ = os.Remove(tmp.Name())
 		return "", err
 	}
-	tmp.Close()
+	_ = tmp.Close()
 	return tmp.Name(), nil
 }

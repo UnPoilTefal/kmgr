@@ -34,6 +34,7 @@ func initColors() {
 		dim = ""
 		bold = ""
 	}
+
 }
 
 // ---------------------------------------------------------------------------
@@ -47,7 +48,6 @@ func info(msg string)    { ifVerbose(fmt.Sprintf("%s▸%s %s\n", cyan, reset, ms
 func ok(msg string)      { ifVerbose(fmt.Sprintf("%s✓%s %s\n", green, reset, msg)) }
 func warn(msg string)    { ifVerbose(fmt.Sprintf("%s⚠%s %s\n", yellow, reset, msg)) }
 func section(msg string) { ifVerbose(fmt.Sprintf("\n%s%s%s\n", bold, msg, reset)) }
-func meta(msg string)    { ifVerbose(fmt.Sprintf("%s%s%s\n", dim, msg, reset)) }
 func hint(cmd string)    { ifVerbose(fmt.Sprintf("  %s→%s  %s\n", cyan, reset, cmd)) }
 
 // stderr — toujours affiché, même en mode quiet.

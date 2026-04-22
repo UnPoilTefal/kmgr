@@ -42,8 +42,8 @@ func runInit(_ *cobra.Command, _ []string) error {
 		if f, err := os.OpenFile(profile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
 			warn(fmt.Sprintf("Impossible d'ouvrir %s : %v", profile, err))
 		} else {
-			fmt.Fprintf(f, "\n# kcfg\n%s\n", kcLine)
-			f.Close()
+			_, _ = fmt.Fprintf(f, "\n# kcfg\n%s\n", kcLine)
+			_ = f.Close()
 			ok(fmt.Sprintf("KUBECONFIG ajouté à %s (recharge ton shell)", profile))
 		}
 	}
@@ -54,8 +54,8 @@ func runInit(_ *cobra.Command, _ []string) error {
 		if f, err := os.OpenFile(profile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
 			warn(fmt.Sprintf("Impossible d'ajouter la complétion à %s : %v", profile, err))
 		} else {
-			fmt.Fprintf(f, "%s\n", completionLine)
-			f.Close()
+			_, _ = fmt.Fprintf(f, "%s\n", completionLine)
+			_ = f.Close()
 			ok(fmt.Sprintf("Complétion %s ajoutée à %s (recharge ton shell)", shellName, profile))
 		}
 	}
