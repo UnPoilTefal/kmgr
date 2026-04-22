@@ -62,7 +62,7 @@ brews:
 # ─── Docker ──────────────────────────────────────────────────────────────────
 dockers:
   - image_templates:
-      - "ghcr.io/UnPoilTefal/kmgr:{{ .Tag }}-amd64"
+      - "ghcr.io/unpoiltefal/kmgr:{{ .Tag }}-amd64"
     use: buildx
     build_flag_templates:
       - "--platform=linux/amd64"
@@ -70,7 +70,7 @@ dockers:
     dockerfile: Dockerfile
 
   - image_templates:
-      - "ghcr.io/UnPoilTefal/kmgr:{{ .Tag }}-arm64"
+      - "ghcr.io/unpoiltefal/kmgr:{{ .Tag }}-arm64"
     use: buildx
     build_flag_templates:
       - "--platform=linux/arm64"
