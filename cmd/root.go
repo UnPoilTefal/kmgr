@@ -60,7 +60,7 @@ func ifVerbose(s string) {
 }
 
 // warnEnvDesync affiche un avertissement si KUBECONFIG ne pointe pas vers
-// le fichier mergé géré par kcfg (désynchro entre env et KCFG_DIR).
+// le fichier mergé géré par kmgr (désynchro entre env et KMGR_DIR).
 func warnEnvDesync() {
 	kc := os.Getenv("KUBECONFIG")
 	if kc == "" {
@@ -72,7 +72,7 @@ func warnEnvDesync() {
 			return // cohérent
 		}
 	}
-	warn(fmt.Sprintf("KUBECONFIG=%s ne pointe pas vers le fichier kcfg (%s)", kc, merged))
+	warn(fmt.Sprintf("KUBECONFIG=%s ne pointe pas vers le fichier kmgr (%s)", kc, merged))
 	hint(fmt.Sprintf("export KUBECONFIG=%s", merged))
 }
 
@@ -81,9 +81,9 @@ func warnEnvDesync() {
 // ---------------------------------------------------------------------------
 
 var rootCmd = &cobra.Command{
-	Use:   "kcfg",
+	Use:   "kmgr",
 	Short: "Kubeconfig Manager — normalise et gère les kubeconfigs d'entreprise",
-	Long: `kcfg — Kubeconfig Manager
+	Long: `kmgr — Kubeconfig Manager
 
 Convention de nommage :
   Fichier source : kubeconfig_{user}@{cluster}.yaml
@@ -91,7 +91,7 @@ Convention de nommage :
   Exemple        : kubeconfig_john@prod-payments.yaml → john@prod-payments
 
 Variables d'environnement :
-  KCFG_DIR   Répertoire de base (défaut: ~/.kube)
+  KMGR_DIR   Répertoire de base (défaut: ~/.kube)
   NO_COLOR   Désactive les couleurs (https://no-color.org)`,
 	SilenceErrors: true, // on gère l'affichage nous-mêmes
 	SilenceUsage:  true, // on affiche le usage explicitement si besoin

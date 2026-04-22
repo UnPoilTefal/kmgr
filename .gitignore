@@ -9,7 +9,6 @@ bin/
 
 # Build artifacts
 /kmgr
-/kcfg
 
 # Go
 vendor/

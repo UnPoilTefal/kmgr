@@ -49,7 +49,7 @@ func runCheck(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	if len(sources) == 0 {
-		warn("Aucun kubeconfig_*.yaml — lance : kcfg import -f <fichier> -u <user> -c <cluster>")
+		warn("Aucun kubeconfig_*.yaml — lance : kmgr import -f <fichier> -u <user> -c <cluster>")
 	}
 	sourceIssues := 0
 	for _, s := range sources {
@@ -94,18 +94,18 @@ func runCheck(_ *cobra.Command, _ []string) error {
 
 	if sourceIssues > 0 {
 		warn(fmt.Sprintf("%d problème(s) de normalisation dans les fichiers source", sourceIssues))
-		hint("kcfg fix")
+		hint("kmgr fix")
 	}
 	if contextIssues > 0 {
 		warn(fmt.Sprintf("%d problème(s) structurel(s) dans le fichier cible", contextIssues))
-		hint("kcfg merge")
+		hint("kmgr merge")
 	}
 	if unreachable > 0 {
 		warn(fmt.Sprintf("%d contexte(s) non joignable(s) — vérifier la connectivité réseau", unreachable))
 	}
 	if unauthenticated > 0 {
 		warn(fmt.Sprintf("%d contexte(s) joignable(s) mais authentification échouée", unauthenticated))
-		hint("kcfg import --force -u <user> -c <cluster>")
+		hint("kmgr import --force -u <user> -c <cluster>")
 	}
 
 	// Exit code 1 pour permettre l'usage en CI / scripting.
@@ -127,7 +127,7 @@ func printSourceCheck(s config.SourceCheck) {
 	for _, issue := range s.Issues {
 		fmt.Printf("      %s⚠%s  %s\n", yellow, reset, issue)
 	}
-	hint("kcfg fix")
+	hint("kmgr fix")
 	fmt.Println()
 }
 
@@ -173,7 +173,7 @@ func printContextCheck(c config.ContextCheck) {
 		fmt.Printf("      %s⚠%s  %s\n", yellow, reset, issue)
 	}
 	if len(c.Issues) > 0 {
-		hint("kcfg merge")
+		hint("kmgr merge")
 	}
 
 	switch {
@@ -192,7 +192,7 @@ func printContextCheck(c config.ContextCheck) {
 func importHint(ctxName string) string {
 	at := strings.LastIndex(ctxName, "@")
 	if at < 0 {
-		return "kcfg import --force -u <user> -c <cluster>"
+		return "kmgr import --force -u <user> -c <cluster>"
 	}
-	return fmt.Sprintf("kcfg import --force -u %s -c %s", ctxName[:at], ctxName[at+1:])
+	return fmt.Sprintf("kmgr import --force -u %s -c %s", ctxName[:at], ctxName[at+1:])
 }

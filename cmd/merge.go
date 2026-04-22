@@ -47,7 +47,7 @@ func runMergeInternal() error {
 		quarantineDir := filepath.Join(configsDir, "quarantine")
 		for _, f := range result.Quarantined {
 			logErr(fmt.Sprintf("%s : nom non conforme ou non parseable → mis en quarantaine", f))
-			hint(fmt.Sprintf("kcfg import -f %s -u <user> -c <cluster>", filepath.Join(quarantineDir, f)))
+			hint(fmt.Sprintf("kmgr import -f %s -u <user> -c <cluster>", filepath.Join(quarantineDir, f)))
 		}
 	}
 

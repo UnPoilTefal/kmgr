@@ -75,7 +75,7 @@ kmgr init
 This creates the directory structure (`~/.kube/configs/`, `~/.kube/backups/`) and adds to your shell profile (`~/.bashrc` / `~/.zshrc`):
 
 ```bash
-export KUBECONFIG="${KCFG_DIR:-$HOME/.kube}/config"
+export KUBECONFIG="${KMGR_DIR:-$HOME/.kube}/config"
 source <(kmgr completion bash)  # or zsh
 ```
 
@@ -133,7 +133,7 @@ Example:
 ## Directory Structure
 
 ```
-~/.kube/                         # Base directory (configurable via KCFG_DIR)
+~/.kube/                         # Base directory (configurable via KMGR_DIR)
 ├── config                       # Active merged kubeconfig (managed by kmgr)
 ├── configs/                     # Source files (one context each)
 │   ├── kubeconfig_john@prod.yaml
@@ -148,12 +148,12 @@ Example:
 
 | Variable   | Default   | Description |
 |-----------|-----------|-------------|
-| `KCFG_DIR` | `~/.kube` | Base directory (configs/, backups/, config) |
+| `KMGR_DIR` | `~/.kube` | Base directory (configs/, backups/, config) |
 | `NO_COLOR` | _(unset)_ | Disable ANSI colors ([no-color.org](https://no-color.org)) |
 
 ```bash
 # Custom directory
-export KCFG_DIR="$HOME/.config/kmgr"
+export KMGR_DIR="$HOME/.config/kmgr"
 
 # Disable colors
 export NO_COLOR=1

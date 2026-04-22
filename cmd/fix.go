@@ -68,7 +68,7 @@ func runFix(_ *cobra.Command, _ []string) error {
 				errors++
 			} else {
 				warn(fmt.Sprintf("%s : non corrigeable → mis en quarantaine", s.File))
-				hint(fmt.Sprintf("kcfg import -f %s -u <user> -c <cluster>", dest))
+				hint(fmt.Sprintf("kmgr import -f %s -u <user> -c <cluster>", dest))
 				quarantined++
 			}
 			continue

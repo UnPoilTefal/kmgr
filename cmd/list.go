@@ -26,7 +26,7 @@ func runList(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	if len(files) == 0 {
-		warn("Aucun kubeconfig importé. Lance : kcfg import -f <fichier> -u <user> -c <cluster>")
+		warn("Aucun kubeconfig importé. Lance : kmgr import -f <fichier> -u <user> -c <cluster>")
 		return nil
 	}
 

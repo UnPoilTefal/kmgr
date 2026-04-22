@@ -22,10 +22,10 @@ La source peut être un fichier (-f), le contenu du clipboard (--clipboard)
 ou un pipe stdin (--stdin).
 
 Exemples :
-  kcfg import -f ~/Downloads/kubeconfig.yaml -u john -c prod-payments
-  kcfg import --clipboard -u john -c prod-payments
-  k3d kubeconfig get mycluster  | kcfg import --stdin -u john -c mycluster
-  kind get kubeconfig --name dev | kcfg import --stdin -u john -c dev`,
+  kmgr import -f ~/Downloads/kubeconfig.yaml -u john -c prod-payments
+  kmgr import --clipboard -u john -c prod-payments
+  k3d kubeconfig get mycluster  | kmgr import --stdin -u john -c mycluster
+  kind get kubeconfig --name dev | kmgr import --stdin -u john -c dev`,
 	RunE: runImport,
 }
 
@@ -157,7 +157,7 @@ func writeStdinToTemp() (string, error) {
 	if len(data) == 0 {
 		return "", fmt.Errorf("stdin est vide")
 	}
-	tmp, err := os.CreateTemp("", "kcfg-stdin-*.yaml")
+	tmp, err := os.CreateTemp("", "kmgr-stdin-*.yaml")
 	if err != nil {
 		return "", err
 	}
@@ -177,7 +177,7 @@ func writeClipboardToTemp() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	tmp, err := os.CreateTemp("", "kcfg-clipboard-*.yaml")
+	tmp, err := os.CreateTemp("", "kmgr-clipboard-*.yaml")
 	if err != nil {
 		return "", err
 	}

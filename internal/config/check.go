@@ -166,7 +166,7 @@ func CheckTarget(mergedPath string) (TargetCheck, error) {
 
 	fi, err := os.Stat(mergedPath)
 	if os.IsNotExist(err) {
-		result.Issues = append(result.Issues, Issue{Field: "fichier", Got: "introuvable — lance 'kcfg merge'"})
+		result.Issues = append(result.Issues, Issue{Field: "fichier", Got: "introuvable — lance 'kmgr merge'"})
 		return result, nil
 	}
 	if err != nil {

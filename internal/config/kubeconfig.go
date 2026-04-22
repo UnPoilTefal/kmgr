@@ -19,7 +19,7 @@ import (
 
 // Dirs returns kubeDir, configsDir, backupDir.
 func Dirs() (string, string, string) {
-	base := os.Getenv("KCFG_DIR")
+	base := os.Getenv("KMGR_DIR")
 	if base == "" {
 		home, _ := os.UserHomeDir()
 		base = filepath.Join(home, ".kube")
@@ -250,7 +250,7 @@ func MergeAll(configsDir, mergedPath string) (*MergeResult, error) {
 // not-yet-written mergedPath.
 // Returns (reachable, authenticated).
 func probeContext(cfg *clientcmdapi.Config, ctxName string) (reachable, authenticated bool) {
-	tmp, err := os.CreateTemp("", "kcfg-probe-*.yaml")
+	tmp, err := os.CreateTemp("", "kmgr-probe-*.yaml")
 	if err != nil {
 		return false, false
 	}

@@ -18,7 +18,7 @@ var initCmd = &cobra.Command{
 }
 
 func runInit(_ *cobra.Command, _ []string) error {
-	section("Initialisation de kcfg")
+	section("Initialisation de kmgr")
 
 	_, configsDir, backupDir := config.Dirs()
 
@@ -33,8 +33,8 @@ func runInit(_ *cobra.Command, _ []string) error {
 	data, _ := os.ReadFile(profile)
 	content := string(data)
 
-	kcLine := `export KUBECONFIG="${KCFG_DIR:-$HOME/.kube}/config"`
-	completionLine := fmt.Sprintf("source <(kcfg completion %s)", shellName)
+	kcLine := `export KUBECONFIG="${KMGR_DIR:-$HOME/.kube}/config"`
+	completionLine := fmt.Sprintf("source <(kmgr completion %s)", shellName)
 
 	if strings.Contains(content, "KUBECONFIG") {
 		info(fmt.Sprintf("KUBECONFIG déjà présent dans %s", profile))
@@ -42,13 +42,13 @@ func runInit(_ *cobra.Command, _ []string) error {
 		if f, err := os.OpenFile(profile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {
 			warn(fmt.Sprintf("Impossible d'ouvrir %s : %v", profile, err))
 		} else {
-			_, _ = fmt.Fprintf(f, "\n# kcfg\n%s\n", kcLine)
+			_, _ = fmt.Fprintf(f, "\n# kmgr\n%s\n", kcLine)
 			_ = f.Close()
 			ok(fmt.Sprintf("KUBECONFIG ajouté à %s (recharge ton shell)", profile))
 		}
 	}
 
-	if strings.Contains(content, "kcfg completion") {
+	if strings.Contains(content, "kmgr completion") {
 		info(fmt.Sprintf("Complétion déjà configurée dans %s", profile))
 	} else {
 		if f, err := os.OpenFile(profile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err != nil {

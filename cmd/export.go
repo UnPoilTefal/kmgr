@@ -18,11 +18,11 @@ var exportCmd = &cobra.Command{
 	Long: `Exporte le kubeconfig correspondant au contexte donné.
 
 Sans --file, écrit le contenu brut sur stdout (mode pipe) :
-  kcfg export john@prod | kubectl apply --kubeconfig /dev/stdin -f manifest.yaml
-  kcfg export john@prod > /tmp/kubeconfig.yaml
+  kmgr export john@prod | kubectl apply --kubeconfig /dev/stdin -f manifest.yaml
+  kmgr export john@prod > /tmp/kubeconfig.yaml
 
 Avec --file, écrit vers le fichier destination avec les permissions 0600 :
-  kcfg export john@prod --file ./kubeconfig-prod.yaml`,
+  kmgr export john@prod --file ./kubeconfig-prod.yaml`,
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeContexts,
 	RunE:              runExport,

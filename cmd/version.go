@@ -40,9 +40,9 @@ func runVersion(_ *cobra.Command, _ []string) error {
 	// ---- Configuration ----------------------------------------------------------
 	section("Configuration")
 
-	kcfgDir := os.Getenv("KCFG_DIR")
-	if kcfgDir != "" {
-		fmt.Printf("  %-16s %s%s%s %s(KCFG_DIR)%s\n", "répertoire", bold, kcfgDir, reset, dim, reset)
+	kmgrDir := os.Getenv("KMGR_DIR")
+	if kmgrDir != "" {
+		fmt.Printf("  %-16s %s%s%s %s(KMGR_DIR)%s\n", "répertoire", bold, kmgrDir, reset, dim, reset)
 	} else {
 		fmt.Printf("  %-16s %s %s(défaut)%s\n", "répertoire", kubeDir(), dim, reset)
 	}
