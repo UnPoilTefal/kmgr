@@ -46,6 +46,9 @@ func runMergeInternal() error {
 			fmt.Printf("  %s+%s %s\n", dim, reset, filepath.Base(f))
 		}
 	}
+	if result.ChmodWarn != "" {
+		warn(fmt.Sprintf("permissions 0600 non appliquées sur %s : %s", config.MergedFile(), result.ChmodWarn))
+	}
 	if len(result.Quarantined) > 0 {
 		_, configsDir, _ := config.Dirs()
 		quarantineDir := filepath.Join(configsDir, "quarantine")
@@ -65,5 +68,7 @@ func runMergeInternal() error {
 			warn(fmt.Sprintf("Contexte actif restauré : %s (non joignable)", result.RestoredCtx))
 		}
 	}
+
+	reportSyncResults(config.SyncMirrors())
 	return nil
 }

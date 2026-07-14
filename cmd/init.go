@@ -67,6 +67,14 @@ func runInit(_ *cobra.Command, _ []string) error {
 		fmt.Printf("  %sconfig%s    → fichier mergé actif\n", cyan, reset)
 		fmt.Printf("  %sbackups/%s  → sauvegardes automatiques\n", cyan, reset)
 	}
+
+	// Sous WSL2, proposer de publier le kubeconfig côté Windows.
+	if config.IsWSL() {
+		if mirrors, _ := config.ListMirrors(); len(mirrors) == 0 {
+			info("WSL détecté — pour publier le kubeconfig côté Windows :")
+			hint("kmgr sync add --windows")
+		}
+	}
 	return nil
 }
 
