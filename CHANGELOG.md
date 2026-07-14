@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-07-14
+
+### Fixed
+- Released binaries reported `dev/none/unknown` in `kmgr version`: GoReleaser
+  injected `main.version` while the version variables live in the `cmd` package
+  (`cmd.Version`, `cmd.Commit`, `cmd.BuildDate`). Affected all releases since 0.1.0.
+- Homebrew tap: replace the placeholder formula description.
+
 ## [0.4.0] - 2026-07-14
 
 ### Added
