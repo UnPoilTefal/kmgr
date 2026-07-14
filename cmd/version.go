@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -94,8 +93,7 @@ func printClipboardStatus() {
 	case "windows":
 		printTool("powershell.exe", "Windows natif")
 	default:
-		data, _ := os.ReadFile("/proc/version")
-		if isWSL(string(data)) {
+		if config.IsWSL() {
 			printTool("powershell.exe", "WSL → Windows")
 		} else {
 			switch {
@@ -119,11 +117,6 @@ func printTool(name, context string) {
 	} else {
 		fmt.Printf("  %s✗%s %-14s introuvable dans PATH\n", red, reset, name)
 	}
-}
-
-func isWSL(procVersion string) bool {
-	lower := strings.ToLower(procVersion)
-	return strings.Contains(lower, "microsoft") || strings.Contains(lower, "wsl")
 }
 
 func toolAvailable(name string) bool {
