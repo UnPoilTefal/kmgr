@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -25,7 +26,7 @@ var (
 )
 
 func initColors() {
-	if os.Getenv("NO_COLOR") != "" || quietMode {
+	if os.Getenv("NO_COLOR") != "" || quietMode || aiMode {
 		reset = ""
 		red = ""
 		yellow = ""
@@ -41,14 +42,70 @@ func initColors() {
 // Helpers d'affichage
 // ---------------------------------------------------------------------------
 
-var quietMode bool
+var (
+	quietMode bool
+	aiMode    bool
+)
 
-// stdout — silencieux en mode quiet.
-func info(msg string)    { ifVerbose(fmt.Sprintf("%s▸%s %s\n", cyan, reset, msg)) }
-func ok(msg string)      { ifVerbose(fmt.Sprintf("%s✓%s %s\n", green, reset, msg)) }
-func warn(msg string)    { ifVerbose(fmt.Sprintf("%s⚠%s %s\n", yellow, reset, msg)) }
-func section(msg string) { ifVerbose(fmt.Sprintf("\n%s%s%s\n", bold, msg, reset)) }
-func hint(cmd string)    { ifVerbose(fmt.Sprintf("  %s→%s  %s\n", cyan, reset, cmd)) }
+// initAIMode active le mode IA depuis l'environnement quand le flag --ai
+// n'a pas été passé explicitement (le flag prime toujours) :
+//   - KMGR_AI=1/true/yes/on  → activé ; 0/false/no/off → désactivé
+//   - sinon, auto-détection d'un agent (Claude Code exporte CLAUDECODE=1)
+func initAIMode(cmd *cobra.Command) {
+	if cmd != nil && cmd.Root().PersistentFlags().Changed("ai") {
+		return
+	}
+	switch strings.ToLower(os.Getenv("KMGR_AI")) {
+	case "1", "true", "yes", "on":
+		aiMode = true
+	case "0", "false", "no", "off":
+		aiMode = false
+	default:
+		if os.Getenv("CLAUDECODE") != "" {
+			aiMode = true
+		}
+	}
+}
+
+// stdout — silencieux en mode quiet ; épuré en mode IA (--ai) :
+// les décorations (info, section, hint) sont supprimées, ok/warn restent
+// en une ligne de texte brut.
+func info(msg string) {
+	if aiMode {
+		return
+	}
+	ifVerbose(fmt.Sprintf("%s▸%s %s\n", cyan, reset, msg))
+}
+
+func ok(msg string) {
+	if aiMode {
+		ifVerbose(msg + "\n")
+		return
+	}
+	ifVerbose(fmt.Sprintf("%s✓%s %s\n", green, reset, msg))
+}
+
+func warn(msg string) {
+	if aiMode {
+		ifVerbose("warn: " + msg + "\n")
+		return
+	}
+	ifVerbose(fmt.Sprintf("%s⚠%s %s\n", yellow, reset, msg))
+}
+
+func section(msg string) {
+	if aiMode {
+		return
+	}
+	ifVerbose(fmt.Sprintf("\n%s%s%s\n", bold, msg, reset))
+}
+
+func hint(cmd string) {
+	if aiMode {
+		return
+	}
+	ifVerbose(fmt.Sprintf("  %s→%s  %s\n", cyan, reset, cmd))
+}
 
 // stderr — toujours affiché, même en mode quiet.
 func logErr(msg string) { fmt.Fprintf(os.Stderr, "%s✗%s %s\n", red, reset, msg) }
@@ -92,7 +149,8 @@ Convention de nommage :
 
 Variables d'environnement :
   KMGR_DIR   Répertoire de base (défaut: ~/.kube)
-  NO_COLOR   Désactive les couleurs (https://no-color.org)`,
+  NO_COLOR   Désactive les couleurs (https://no-color.org)
+  KMGR_AI    1 = sortie compacte pour agents IA (équivaut à --ai, 0 pour forcer off)`,
 	SilenceErrors: true, // on gère l'affichage nous-mêmes
 	SilenceUsage:  true, // on affiche le usage explicitement si besoin
 	PersistentPreRun: func(_ *cobra.Command, _ []string) {
@@ -105,10 +163,12 @@ Variables d'environnement :
 var lastCmd *cobra.Command
 
 func Execute() {
-	initColors() // nécessaire pour les erreurs avant PersistentPreRun (ex: flags manquants)
+	initAIMode(nil) // détection env uniquement — les flags ne sont pas encore parsés
+	initColors()    // nécessaire pour les erreurs avant PersistentPreRun (ex: flags manquants)
 
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		lastCmd = cmd
+		initAIMode(cmd)
 		initColors()
 	}
 
@@ -146,6 +206,7 @@ func isUsageError(err error) bool {
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&quietMode, "quiet", "q", false, "Supprime toute sortie sauf les erreurs")
+	rootCmd.PersistentFlags().BoolVar(&aiMode, "ai", false, "Sortie compacte pour agents IA (auto: KMGR_AI=1 ou CLAUDECODE)")
 
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(importCmd)

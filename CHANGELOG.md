@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **AI mode** (`--ai` flag / `KMGR_AI=1` env): compact, decoration-free output to
+  minimize token usage when kmgr is driven by an AI agent. Auto-enabled when the
+  `CLAUDECODE` env var is present (Claude Code sessions); `KMGR_AI=0` forces it off.
 - Initial release of kmgr
 - Strict kubeconfig naming convention: `kubeconfig_{user}@{cluster}.yaml`
 - Multi-platform support (Linux, macOS, Windows)

@@ -42,7 +42,9 @@ func runCheck(_ *cobra.Command, _ []string) error {
 
 	// ---- Section 1 : fichiers source ----------------------------------------
 	section("Fichiers source")
-	fmt.Printf("  %s%s%s\n\n", dim, configsDir, reset)
+	if !aiMode {
+		fmt.Printf("  %s%s%s\n\n", dim, configsDir, reset)
+	}
 
 	sources, err := config.CheckSourceFiles(configsDir)
 	if err != nil {
@@ -59,7 +61,9 @@ func runCheck(_ *cobra.Command, _ []string) error {
 
 	// ---- Section 2 : kubeconfig cible ----------------------------------------
 	section("Kubeconfig cible")
-	fmt.Printf("  %s%s%s\n\n", dim, mergedPath, reset)
+	if !aiMode {
+		fmt.Printf("  %s%s%s\n\n", dim, mergedPath, reset)
+	}
 
 	target, err := config.CheckTarget(mergedPath)
 	if err != nil {
@@ -68,7 +72,9 @@ func runCheck(_ *cobra.Command, _ []string) error {
 	printTargetCheck(target)
 
 	// ---- Résumé ---------------------------------------------------------------
-	fmt.Println()
+	if !aiMode {
+		fmt.Println()
+	}
 	targetIssues := len(target.Issues)
 	contextIssues := 0
 	unreachable := 0
@@ -115,6 +121,13 @@ func runCheck(_ *cobra.Command, _ []string) error {
 
 // printSourceCheck affiche le résultat d'un fichier source.
 func printSourceCheck(s config.SourceCheck) {
+	if aiMode {
+		// Compact : seules les anomalies sont listées.
+		for _, issue := range s.Issues {
+			fmt.Printf("source %s: %s\n", s.File, issue)
+		}
+		return
+	}
 	if s.OK() {
 		fmt.Printf("  %s✓%s %s\n", green, reset, s.File)
 		return
@@ -154,6 +167,21 @@ func printTargetCheck(t config.TargetCheck) {
 
 // printContextCheck affiche un contexte du fichier cible.
 func printContextCheck(c config.ContextCheck) {
+	if aiMode {
+		// Une ligne par contexte : état + détail éventuel.
+		state := "ok"
+		switch {
+		case len(c.Issues) > 0:
+			state = fmt.Sprintf("invalid (%v)", c.Issues[0])
+		case !c.Reachable:
+			state = fmt.Sprintf("unreachable (%s)", c.ReachErr)
+		case !c.Authenticated:
+			state = fmt.Sprintf("auth failed (%s)", c.AuthErr)
+		}
+		fmt.Printf("%s: %s\n", c.ContextName, state)
+		return
+	}
+
 	hasIssues := len(c.Issues) > 0
 
 	switch {
