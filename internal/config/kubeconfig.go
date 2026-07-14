@@ -178,6 +178,7 @@ type MergeResult struct {
 	RestoredCtx    string   // context restored from before the merge, if any
 	RestoredOnline bool     // whether the restored context was reachable (TCP+TLS)
 	RestoredAuthed bool     // whether the restored context was authenticated
+	ChmodWarn      string   // non-fatal chmod failure (e.g. merged file is a symlink to a Windows drvfs mount)
 }
 
 // MergeAll merges all kubeconfig_*.yaml files from configsDir into mergedPath.
@@ -238,8 +239,11 @@ func MergeAll(configsDir, mergedPath string) (*MergeResult, error) {
 		return nil, err
 	}
 	if runtime.GOOS != "windows" {
+		// Non-fatal : un chmod peut échouer si le fichier mergé est un symlink
+		// vers un montage Windows (drvfs sous WSL2), où les modes Unix ne
+		// s'appliquent pas. L'écriture, elle, a réussi.
 		if err := os.Chmod(mergedPath, 0600); err != nil {
-			return nil, err
+			result.ChmodWarn = err.Error()
 		}
 	}
 	return result, nil

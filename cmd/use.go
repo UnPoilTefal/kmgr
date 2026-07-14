@@ -22,5 +22,6 @@ func runUse(_ *cobra.Command, args []string) error {
 		return err
 	}
 	ok(fmt.Sprintf("Contexte actif → %s", ctxName))
+	reportSyncResults(config.SyncMirrors())
 	return nil
 }

@@ -177,6 +177,7 @@ export NO_COLOR=1
 | `kmgr rename <old> <new>` | Rename a context |
 | `kmgr export <context>` | Export context to file or stdout (pipe-ready) |
 | `kmgr remove <context>` | Remove a context (with confirmation) |
+| `kmgr sync` | Manage mirror copies of the merged config (WSL2 → Windows) |
 | `kmgr completion` | Generate shell completion (bash/zsh) |
 | `kmgr version` | Show version, config paths, and system info |
 
@@ -237,6 +238,37 @@ connectivity: ok
 
 Errors always go to stderr in both modes; `kmgr check` keeps its exit code 1
 on anomalies, so scripting behavior is unchanged.
+
+---
+
+## Windows / WSL2 sync (`kmgr sync`)
+
+Under WSL2, kmgr writes the merged config to the Linux filesystem, and
+Windows-side tools (Lens, kubectl.exe…) never see the updates. `kmgr sync`
+maintains **mirror copies** of the merged kubeconfig:
+
+```bash
+kmgr sync add --windows        # auto-detects /mnt/c/Users/<you>/.kube/config
+kmgr sync add /some/path       # or any explicit target
+kmgr sync status               # show targets + freshness (in-sync/stale/missing)
+kmgr sync now                  # force an immediate resync
+kmgr sync remove <path>        # unregister (target file is kept)
+```
+
+Every command that rewrites the merged config (`import`, `merge`, `use`,
+`rename`, `remove`, `fix`) automatically refreshes all mirrors, so the Windows
+side always has the latest contexts **and** the latest current-context. A
+failing mirror (e.g. Windows drive not mounted) is a warning, never an error.
+
+Mirrors are one-way (kmgr → target): kmgr owns the merged file, so don't edit
+the mirror by hand — switch contexts with `kmgr use` on the WSL side.
+
+Targets are stored in `$KMGR_DIR/mirrors`, one absolute path per line.
+
+> Alternative: making `~/.kube/config` a symlink to the Windows file also
+> works (kmgr follows symlinks and tolerates `chmod` failures on drvfs), but
+> every kubectl call in WSL then reads through the slow 9p mount, and 0600
+> permissions can't be enforced. Mirrors avoid both issues.
 
 ---
 

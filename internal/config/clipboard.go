@@ -36,7 +36,7 @@ func clipboardCmd() (*exec.Cmd, error) {
 		return exec.Command("powershell.exe", "-NoProfile", "-Command", "Get-Clipboard"), nil
 
 	default: // Linux / WSL
-		if isWSL() {
+		if IsWSL() {
 			return exec.Command("powershell.exe", "-NoProfile", "-Command", "Get-Clipboard"), nil
 		}
 		// Wayland takes priority over X11.
@@ -56,8 +56,8 @@ func clipboardCmd() (*exec.Cmd, error) {
 	}
 }
 
-// isWSL detects whether we are running inside Windows Subsystem for Linux.
-func isWSL() bool {
+// IsWSL detects whether we are running inside Windows Subsystem for Linux.
+func IsWSL() bool {
 	data, err := os.ReadFile("/proc/version")
 	if err != nil {
 		return false
