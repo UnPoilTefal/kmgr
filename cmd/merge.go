@@ -38,9 +38,13 @@ func runMergeInternal() error {
 		return nil
 	}
 
-	ok(fmt.Sprintf("%d fichier(s) mergé(s) → %s", len(result.Files), config.MergedFile()))
-	for _, f := range result.Files {
-		fmt.Printf("  %s+%s %s\n", dim, reset, filepath.Base(f))
+	if aiMode {
+		ifVerbose(fmt.Sprintf("merged: %d fichier(s) -> %s\n", len(result.Files), config.MergedFile()))
+	} else {
+		ok(fmt.Sprintf("%d fichier(s) mergé(s) → %s", len(result.Files), config.MergedFile()))
+		for _, f := range result.Files {
+			fmt.Printf("  %s+%s %s\n", dim, reset, filepath.Base(f))
+		}
 	}
 	if len(result.Quarantined) > 0 {
 		_, configsDir, _ := config.Dirs()

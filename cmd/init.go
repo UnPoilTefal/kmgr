@@ -62,9 +62,11 @@ func runInit(_ *cobra.Command, _ []string) error {
 
 	kubeDir, _, _ := config.Dirs()
 	ok(fmt.Sprintf("Structure prête : %s", kubeDir))
-	fmt.Printf("  %sconfigs/%s  → fichiers sources individuels\n", cyan, reset)
-	fmt.Printf("  %sconfig%s    → fichier mergé actif\n", cyan, reset)
-	fmt.Printf("  %sbackups/%s  → sauvegardes automatiques\n", cyan, reset)
+	if !aiMode {
+		fmt.Printf("  %sconfigs/%s  → fichiers sources individuels\n", cyan, reset)
+		fmt.Printf("  %sconfig%s    → fichier mergé actif\n", cyan, reset)
+		fmt.Printf("  %sbackups/%s  → sauvegardes automatiques\n", cyan, reset)
+	}
 	return nil
 }
 

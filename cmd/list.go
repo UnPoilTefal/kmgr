@@ -32,6 +32,20 @@ func runList(_ *cobra.Command, _ []string) error {
 
 	currentCtx := config.CurrentContext()
 
+	// Mode IA : un contexte par ligne, '*' marque le contexte actif.
+	// Le cluster et le fichier sont dérivables du nom de contexte.
+	if aiMode {
+		for _, f := range files {
+			ctx := normalize.ContextFromFile(f)
+			marker := "  "
+			if ctx == currentCtx {
+				marker = "* "
+			}
+			fmt.Println(marker + ctx)
+		}
+		return nil
+	}
+
 	fmt.Printf("  %-40s %-20s %s\n", "CONTEXTE", "CLUSTER", "FICHIER")
 	fmt.Printf("  %-40s %-20s %s\n", "--------", "-------", "-------")
 

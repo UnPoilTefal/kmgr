@@ -150,6 +150,7 @@ Example:
 |-----------|-----------|-------------|
 | `KMGR_DIR` | `~/.kube` | Base directory (configs/, backups/, config) |
 | `NO_COLOR` | _(unset)_ | Disable ANSI colors ([no-color.org](https://no-color.org)) |
+| `KMGR_AI`  | _(unset)_ | `1` = compact AI-friendly output (same as `--ai`), `0` = force off |
 
 ```bash
 # Custom directory
@@ -203,8 +204,39 @@ kmgr export john@prod -f ~/shared.yaml  # Save to file
 
 ```bash
 kmgr -q <command>       # Quiet mode: suppress all output except errors
+kmgr --ai <command>     # AI mode: compact, decoration-free output (see below)
 kmgr -h                 # Show help
 ```
+
+---
+
+## AI Mode (token-efficient output)
+
+When kmgr is driven by an AI coding agent (Claude Code, etc.), the decorated
+human output (colors, sections, tables, hints) wastes tokens. AI mode keeps
+the facts and drops the decoration:
+
+```bash
+kmgr --ai list          # one context per line, '*' marks the active one
+export KMGR_AI=1        # enable globally
+```
+
+Activation precedence:
+
+1. `--ai` flag (always wins, `--ai=false` forces off)
+2. `KMGR_AI` env: `1/true/yes/on` enables, `0/false/no/off` disables
+3. Auto-detection: enabled when `CLAUDECODE` is set (Claude Code exports it)
+
+Example — `kmgr status` in AI mode:
+
+```
+context: john@prod
+server: https://10.0.0.1:6443
+connectivity: ok
+```
+
+Errors always go to stderr in both modes; `kmgr check` keeps its exit code 1
+on anomalies, so scripting behavior is unchanged.
 
 ---
 

@@ -98,7 +98,9 @@ func runImport(_ *cobra.Command, _ []string) error {
 	if err := config.ValidateKubeconfig(srcFile); err != nil {
 		return fmt.Errorf("kubeconfig invalide : %w", err)
 	}
-	ok("Fichier kubeconfig valide")
+	if !aiMode {
+		ok("Fichier kubeconfig valide")
+	}
 
 	user := normalize.Name(importUser)
 	cluster := normalize.Name(importCluster)
@@ -133,6 +135,11 @@ func runImport(_ *cobra.Command, _ []string) error {
 	oldCtx, oldCluster, oldUser, err := config.NormalizeAndWrite(srcFile, destFile, ctxName, cluster, authInfo)
 	if err != nil {
 		return err
+	}
+
+	if aiMode {
+		ifVerbose(fmt.Sprintf("imported: %s (était %s) -> %s\n", ctxName, oldCtx, destFile))
+		return runMergeInternal()
 	}
 
 	fmt.Printf("  %sancien contexte%s : %s\n", dim, reset, oldCtx)

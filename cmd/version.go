@@ -30,6 +30,14 @@ func init() {
 }
 
 func runVersion(_ *cobra.Command, _ []string) error {
+	if aiMode {
+		kubeDir, configsDir, backupDir := config.Dirs()
+		fmt.Printf("kmgr %s (%s, %s, %s/%s)\n", Version, Commit, BuildDate, runtime.GOOS, runtime.GOARCH)
+		fmt.Printf("dir: %s\nmerged: %s\nconfigs: %s\nbackups: %s\n",
+			kubeDir, config.MergedFile(), configsDir, backupDir)
+		return nil
+	}
+
 	// ---- Version ----------------------------------------------------------------
 	section("Version")
 	fmt.Printf("  %-16s %s%s%s\n", "binaire", bold, Version, reset)
