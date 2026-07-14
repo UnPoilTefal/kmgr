@@ -7,17 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-14
+
 ### Added
 - **AI mode** (`--ai` flag / `KMGR_AI=1` env): compact, decoration-free output to
   minimize token usage when kmgr is driven by an AI agent. Auto-enabled when the
-  `CLAUDECODE` env var is present (Claude Code sessions); `KMGR_AI=0` forces it off.
+  `CLAUDECODE` env var is present (Claude Code sessions); `KMGR_AI=0` forces it off. (#17)
 - **Mirror sync** (`kmgr sync`): register mirror targets for the merged kubeconfig
   (`sync add`, `sync add --windows`, `sync remove`, `sync status`, `sync now`).
   Mirrors are refreshed automatically after every write of the merged file
   (import, merge, use, rename, remove, fix). Primary use case: publishing the
-  kubeconfig to the Windows side (`/mnt/c/Users/<user>/.kube/config`) from WSL2.
+  kubeconfig to the Windows side (`/mnt/c/Users/<user>/.kube/config`) from WSL2. (#18)
+
+### Changed
 - `chmod` failures on the merged file are now a warning instead of a fatal error,
-  so `~/.kube/config` may be a symlink to a Windows drvfs mount under WSL2.
+  so `~/.kube/config` may be a symlink to a Windows drvfs mount under WSL2. (#18)
+
+## [0.3.0] and earlier
+
+### Added
 - Initial release of kmgr
 - Strict kubeconfig naming convention: `kubeconfig_{user}@{cluster}.yaml`
 - Multi-platform support (Linux, macOS, Windows)
