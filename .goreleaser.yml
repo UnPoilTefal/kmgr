@@ -6,7 +6,7 @@ before:
 
 builds:
   - id: kmgr
-    main: main.go          # ← adapte au point d'entrée de ta CLI
+    main: main.go
     binary: kmgr
     env:
       - CGO_ENABLED=0
@@ -17,11 +17,12 @@ builds:
     goarch:
       - amd64
       - arm64
+    # Les variables de version vivent dans le package cmd (voir Makefile).
     ldflags:
       - -s -w
-      - -X main.version={{ .Version }}
-      - -X main.commit={{ .Commit }}
-      - -X main.date={{ .Date }}
+      - -X github.com/UnPoilTefal/kmgr/cmd.Version={{ .Version }}
+      - -X github.com/UnPoilTefal/kmgr/cmd.Commit={{ .ShortCommit }}
+      - -X github.com/UnPoilTefal/kmgr/cmd.BuildDate={{ .Date }}
 
 archives:
   - id: default
@@ -52,7 +53,7 @@ brews:
       name: homebrew-tap            # ← ton repo tap (doit exister)
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     homepage: "https://github.com/UnPoilTefal/kmgr"
-    description: "Description courte de ta CLI"
+    description: "Kubeconfig manager — normalize, merge and switch kubeconfigs with a strict naming convention"
     license: "MIT"
     test: |
       system "#{bin}/kmgr --version"
