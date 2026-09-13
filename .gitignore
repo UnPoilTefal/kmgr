@@ -31,3 +31,4 @@ vendor/
 # Temporary files
 .tmp/
 *.bak
+/dist/

@@ -109,3 +109,9 @@ release-build: clean build-all checksums ## Build all binaries and generate chec
 clean: ## Remove bin/ directory
 	@rm -rf $(BIN_DIR)
 	@echo "→ $(BIN_DIR)/ removed"
+
+snapshot: ## Build a local release without publishing anything
+	go run github.com/goreleaser/goreleaser/v2@latest release --snapshot --clean --skip=publish,docker
+
+release-check: ## Validate the GoReleaser configuration
+	go run github.com/goreleaser/goreleaser/v2@latest check
