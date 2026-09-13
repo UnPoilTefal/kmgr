@@ -55,11 +55,9 @@ homebrew_casks:
       owner: UnPoilTefal
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-      # Le tap porte le ruleset protect-main sans bypass : un push direct y
-      # est refuse (409 Repository rule violations). GoReleaser ouvre donc une
-      # pull request, qu'il reste a merger.
-      pull_request:
-        enabled: true
+      # Push direct. Le tap n'a pas de pull requests (desactivees) et sa
+      # regle « pull_request » a ete retiree du ruleset : elle rendait le
+      # depot impossible a ecrire par l'un comme par l'autre chemin.
     homepage: "https://github.com/UnPoilTefal/kmgr"
     description: "Kubeconfig manager — normalize, merge and switch kubeconfigs with a strict naming convention"
     license: "MIT"
