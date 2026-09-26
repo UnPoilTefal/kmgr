@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/UnPoilTefal/kmgr/internal/config"
+	"github.com/UnPoilTefal/kmgr/internal/normalize"
 )
 
 // writeKubeconfig writes a minimal valid kubeconfig to a temp file and returns its path.
@@ -34,7 +35,8 @@ func TestNormalizeAndWrite(t *testing.T) {
 	src := writeKubeconfig(t, "old-ctx", "old-cluster", "old-user", "https://k8s.example.com")
 	dest := filepath.Join(t.TempDir(), "out.yaml")
 
-	oldCtx, oldCluster, oldUser, err := config.NormalizeAndWrite(src, dest, "john@prod", "prod", "john@prod")
+	identity := normalize.New("john", "prod")
+	oldCtx, oldCluster, oldUser, err := config.NormalizeAndWrite(src, dest, identity, identity.String())
 	if err != nil {
 		t.Fatalf("NormalizeAndWrite error: %v", err)
 	}

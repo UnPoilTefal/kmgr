@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -48,26 +47,15 @@ func runFix(_ *cobra.Command, _ []string) error {
 	for _, s := range sources {
 		fullPath := filepath.Join(configsDir, s.File)
 
-		// Un fichier non corrigeable automatiquement est mis en quarantaine :
-		//   • nom sans user@cluster (ex: kubeconfig_monocluster.yaml)
-		//   • contenu non parseable
-		unfixable := !normalize.IsValidSourceFilename(fullPath)
-		if !unfixable {
-			for _, issue := range s.Issues {
-				if issue.Field == "parse" {
-					unfixable = true
-					break
-				}
-			}
-		}
-
-		if unfixable {
+		// Un fichier non corrigeable automatiquement est mis en quarantaine
+		// (même politique que MergeAll — voir SourceCheck.UnfixableReason).
+		if s.UnfixableReason != "" {
 			dest, err := config.QuarantineFile(fullPath)
 			if err != nil {
 				logErr(fmt.Sprintf("%s : quarantaine impossible : %v", s.File, err))
 				errors++
 			} else {
-				warn(fmt.Sprintf("%s : non corrigeable → mis en quarantaine", s.File))
+				warn(fmt.Sprintf("%s : %s → mis en quarantaine", s.File, s.UnfixableReason))
 				hint(fmt.Sprintf("kmgr import -f %s -u <user> -c <cluster>", dest))
 				quarantined++
 			}
@@ -113,35 +101,24 @@ func fixSourceFile(configsDir string, s config.SourceCheck) (bool, error) {
 		return false, nil
 	}
 
-	// Noms attendus d'après le nom de fichier.
-	fullPath := configsDir + "/" + s.File
-	expectedCtx := normalize.ContextFromFile(fullPath)
-	at := strings.LastIndex(expectedCtx, "@")
-	if at < 0 {
+	// Le nom attendu d'après le nom de fichier — le caller garantit déjà que
+	// s.UnfixableReason est vide, donc le nom de fichier est forcément valide.
+	fullPath := filepath.Join(configsDir, s.File)
+	expected, valid := normalize.FromFilename(fullPath)
+	if !valid {
 		return false, fmt.Errorf("impossible de dériver user@cluster depuis %q", s.File)
 	}
-	// AuthInfo est namespaced : identique au nom du contexte (ex: deschampsf@ctain-d-00).
-	expectedCluster := expectedCtx[at+1:]
-	expectedUser := expectedCtx // AuthInfo == ctxName
 
-	// Un fichier non parseable ne peut pas être corrigé automatiquement.
-	for _, issue := range s.Issues {
-		if issue.Field == "parse" {
-			warn(fmt.Sprintf("%s : non parseable, correction manuelle requise (%s)", s.File, issue.Got))
-			return false, nil
-		}
-	}
-
-	oldCtx, oldCluster, oldUser, err := config.NormalizeAndWrite(fullPath, fullPath, expectedCtx, expectedCluster, expectedUser)
+	oldCtx, oldCluster, oldUser, err := config.NormalizeAndWrite(fullPath, fullPath, expected, expected.String())
 	if err != nil {
 		return false, err
 	}
 
 	// Affiche uniquement les champs qui ont réellement changé.
 	fmt.Printf("  %s~%s %s%s%s\n", yellow, reset, bold, s.File, reset)
-	printIfChanged("context", oldCtx, expectedCtx)
-	printIfChanged("cluster", oldCluster, expectedCluster)
-	printIfChanged("user", oldUser, expectedUser)
+	printIfChanged("context", oldCtx, expected.String())
+	printIfChanged("cluster", oldCluster, expected.Cluster())
+	printIfChanged("user", oldUser, expected.AuthInfo())
 
 	// Signale si les permissions ont aussi été corrigées.
 	for _, issue := range s.Issues {

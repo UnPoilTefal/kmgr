@@ -29,50 +29,79 @@ func TestName(t *testing.T) {
 	}
 }
 
-func TestContextFromFile(t *testing.T) {
+func TestNew(t *testing.T) {
 	tests := []struct {
-		path string
-		want string
+		user, cluster string
+		want          string
 	}{
-		{"/home/user/.kube/configs/kubeconfig_john@prod-payments.yaml", "john@prod-payments"},
-		{"/home/user/.kube/configs/kubeconfig_JOHN@PROD.yaml", "john@prod"},
-		{"kubeconfig_john@prod.yaml", "john@prod"},
-		// Pas de @ → retourne juste le nom normalisé
-		{"kubeconfig_mycluster.yaml", "mycluster"},
-		// Préfixe absent
-		{"monfichier.yaml", "monfichier"},
+		{"john", "prod-payments", "john@prod-payments"},
+		{"JOHN", "PROD", "john@prod"},
+		{"john doe", "prod cluster", "john-doe@prod-cluster"},
 	}
 	for _, tt := range tests {
-		got := normalize.ContextFromFile(tt.path)
+		got := normalize.New(tt.user, tt.cluster).String()
 		if got != tt.want {
-			t.Errorf("ContextFromFile(%q) = %q, want %q", tt.path, got, tt.want)
+			t.Errorf("New(%q, %q) = %q, want %q", tt.user, tt.cluster, got, tt.want)
 		}
 	}
 }
 
-func TestIsValidSourceFilename(t *testing.T) {
+func TestParse(t *testing.T) {
 	tests := []struct {
-		path  string
-		valid bool
+		input string
+		want  string
+		ok    bool
 	}{
-		{"kubeconfig_john@prod.yaml", true},
-		{"/abs/path/kubeconfig_john@prod-payments.yaml", true},
-		// @ manquant
-		{"kubeconfig_mycluster.yaml", false},
-		// user vide (@cluster)
-		{"kubeconfig_@prod.yaml", false},
-		// cluster vide (user@)
-		{"kubeconfig_john@.yaml", false},
-		// préfixe absent
-		{"john@prod.yaml", false},
-		{"config.yaml", false},
-		// double @ — valide : user=a, cluster=b@c
-		{"kubeconfig_a@b@c.yaml", true},
+		{"john@prod-payments", "john@prod-payments", true},
+		{"JOHN@PROD", "JOHN@PROD", true}, // Parse never sanitizes.
+		{"mycluster", "", false},
+		{"@prod", "", false},
+		{"john@", "", false},
+		{"a@b@c", "a@b@c", true}, // double "@" is still parseable.
 	}
 	for _, tt := range tests {
-		got := normalize.IsValidSourceFilename(tt.path)
-		if got != tt.valid {
-			t.Errorf("IsValidSourceFilename(%q) = %v, want %v", tt.path, got, tt.valid)
+		got, ok := normalize.Parse(tt.input)
+		if ok != tt.ok || got.String() != tt.want {
+			t.Errorf("Parse(%q) = (%q, %v), want (%q, %v)", tt.input, got, ok, tt.want, tt.ok)
 		}
+	}
+}
+
+func TestFromFilename(t *testing.T) {
+	tests := []struct {
+		path string
+		want string
+		ok   bool
+	}{
+		{"/home/user/.kube/configs/kubeconfig_john@prod-payments.yaml", "john@prod-payments", true},
+		{"/home/user/.kube/configs/kubeconfig_JOHN@PROD.yaml", "john@prod", true},
+		{"kubeconfig_john@prod.yaml", "john@prod", true},
+		{"kubeconfig_a@b@c.yaml", "a@b@c", true}, // double "@": user=a, cluster=b@c
+		{"kubeconfig_mycluster.yaml", "", false}, // no "@"
+		{"kubeconfig_@prod.yaml", "", false},     // empty user
+		{"kubeconfig_john@.yaml", "", false},     // empty cluster
+		{"monfichier.yaml", "", false},           // missing prefix
+	}
+	for _, tt := range tests {
+		got, ok := normalize.FromFilename(tt.path)
+		if ok != tt.ok || got.String() != tt.want {
+			t.Errorf("FromFilename(%q) = (%q, %v), want (%q, %v)", tt.path, got, ok, tt.want, tt.ok)
+		}
+	}
+}
+
+func TestContextNameAccessors(t *testing.T) {
+	c := normalize.New("john", "prod-payments")
+	if got := c.String(); got != "john@prod-payments" {
+		t.Errorf("String() = %q", got)
+	}
+	if got := c.Cluster(); got != "prod-payments" {
+		t.Errorf("Cluster() = %q", got)
+	}
+	if got := c.AuthInfo(); got != "john@prod-payments" {
+		t.Errorf("AuthInfo() = %q", got)
+	}
+	if got := c.SourceFilename(); got != "kubeconfig_john@prod-payments.yaml" {
+		t.Errorf("SourceFilename() = %q", got)
 	}
 }

@@ -118,9 +118,13 @@ func QuarantineFile(path string) (string, error) {
 }
 
 // NormalizeAndWrite loads a kubeconfig from srcPath, renames the primary
-// context/cluster/user to the canonical names, and writes to destPath (0600).
+// context/cluster/user to the canonical names derived from identity, and
+// writes to destPath (0600). contextKey is the context key actually written
+// to the file — normally identity.String(), except when the caller allows a
+// custom context name (see `kmgr import --ctx`), in which case AuthInfo and
+// cluster still follow identity while the context key follows contextKey.
 // Returns the original context, cluster, and user names.
-func NormalizeAndWrite(srcPath, destPath, ctxName, clusterName, userName string) (oldCtx, oldCluster, oldUser string, err error) {
+func NormalizeAndWrite(srcPath, destPath string, identity normalize.ContextName, contextKey string) (oldCtx, oldCluster, oldUser string, err error) {
 	cfg, err := clientcmd.LoadFromFile(srcPath)
 	if err != nil {
 		return "", "", "", fmt.Errorf("invalid kubeconfig: %w", err)
@@ -143,6 +147,9 @@ func NormalizeAndWrite(srcPath, destPath, ctxName, clusterName, userName string)
 	oldCluster = ctx.Cluster
 	oldUser = ctx.AuthInfo
 
+	clusterName := identity.Cluster()
+	userName := identity.AuthInfo()
+
 	// Build a fresh config with the renamed entries.
 	newCfg := clientcmdapi.NewConfig()
 
@@ -157,8 +164,8 @@ func NormalizeAndWrite(srcPath, destPath, ctxName, clusterName, userName string)
 	newCtx.Cluster = clusterName
 	newCtx.AuthInfo = userName
 	newCtx.Namespace = ctx.Namespace
-	newCfg.Contexts[ctxName] = newCtx
-	newCfg.CurrentContext = ctxName
+	newCfg.Contexts[contextKey] = newCtx
+	newCfg.CurrentContext = contextKey
 
 	if err := clientcmd.WriteToFile(*newCfg, destPath); err != nil {
 		return "", "", "", err
@@ -185,11 +192,11 @@ type MergeResult struct {
 // It preserves the current-context from the previous merged file when the
 // context is still present in the new result.
 func MergeAll(configsDir, mergedPath string) (*MergeResult, error) {
-	files, err := filepath.Glob(filepath.Join(configsDir, "kubeconfig_*.yaml"))
+	checks, err := CheckSourceFiles(configsDir)
 	if err != nil {
 		return nil, err
 	}
-	if len(files) == 0 {
+	if len(checks) == 0 {
 		return nil, nil
 	}
 
@@ -198,19 +205,22 @@ func MergeAll(configsDir, mergedPath string) (*MergeResult, error) {
 
 	merged := clientcmdapi.NewConfig()
 	result := &MergeResult{}
-	for _, f := range files {
-		// Gate 1 — naming convention: kubeconfig_{user}@{cluster}.yaml
-		if !normalize.IsValidSourceFilename(f) {
+	for _, s := range checks {
+		f := filepath.Join(configsDir, s.File)
+
+		// A file kmgr can't fix on its own (bad name or unparseable) is
+		// quarantined rather than merged — same policy as `kmgr fix`.
+		if s.UnfixableReason != "" {
 			if _, err := QuarantineFile(f); err == nil {
-				result.Quarantined = append(result.Quarantined, filepath.Base(f))
+				result.Quarantined = append(result.Quarantined, s.File)
 			}
 			continue
 		}
-		// Gate 2 — parseability.
+
 		cfg, err := clientcmd.LoadFromFile(f)
 		if err != nil {
 			if _, err := QuarantineFile(f); err == nil {
-				result.Quarantined = append(result.Quarantined, filepath.Base(f))
+				result.Quarantined = append(result.Quarantined, s.File)
 			}
 			continue
 		}
@@ -297,6 +307,31 @@ func probeContext(cfg *clientcmdapi.Config, ctxName string) (reachable, authenti
 	}
 	_ = resp.Body.Close()
 	return true, resp.StatusCode == 200
+}
+
+// ManagedContexts lists every managed source kubeconfig, marking which one is
+// active. Files that don't follow the naming convention are skipped — kmgr
+// check/fix report those, not list.
+func ManagedContexts() ([]ManagedContext, error) {
+	_, configsDir, _ := Dirs()
+	files, err := filepath.Glob(filepath.Join(configsDir, "kubeconfig_*.yaml"))
+	if err != nil {
+		return nil, err
+	}
+	current := CurrentContext()
+	out := make([]ManagedContext, 0, len(files))
+	for _, f := range files {
+		identity, ok := normalize.FromFilename(f)
+		if !ok {
+			continue
+		}
+		out = append(out, ManagedContext{
+			Identity: identity,
+			File:     filepath.Base(f),
+			Active:   identity.String() == current,
+		})
+	}
+	return out, nil
 }
 
 // ListContexts returns the sorted list of context names from the merged kubeconfig.
