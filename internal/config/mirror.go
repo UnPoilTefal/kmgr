@@ -152,6 +152,31 @@ func (s MirrorState) String() string {
 	}
 }
 
+// MirrorStatusEntry pairs a mirror target with its freshness state, for
+// rendering in `kmgr sync status`.
+type MirrorStatusEntry struct {
+	Target string
+	State  MirrorState
+	Err    error
+}
+
+// Render renders one mirror's freshness status.
+func (e MirrorStatusEntry) Render(mode OutputMode, p Palette) string {
+	if mode == AI {
+		return fmt.Sprintf("mirror: %s %s\n", e.Target, e.State)
+	}
+	switch e.State {
+	case MirrorInSync:
+		return fmt.Sprintf("  %s✓%s %s %s(à jour)%s\n", p.Green, p.Reset, e.Target, p.Dim, p.Reset)
+	case MirrorStale:
+		return fmt.Sprintf("  %s⚠%s %s %s(obsolète)%s\n", p.Yellow, p.Reset, e.Target, p.Dim, p.Reset)
+	case MirrorMissing:
+		return fmt.Sprintf("  %s⚠%s %s %s(absent)%s\n", p.Yellow, p.Reset, e.Target, p.Dim, p.Reset)
+	default:
+		return fmt.Sprintf("  %s✗%s %s %s(%v)%s\n", p.Red, p.Reset, e.Target, p.Dim, e.Err, p.Reset)
+	}
+}
+
 // CheckMirror compares a mirror target with the merged kubeconfig.
 func CheckMirror(target string) (MirrorState, error) {
 	ref, err := os.ReadFile(MergedFile())

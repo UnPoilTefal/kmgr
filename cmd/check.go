@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 	"sort"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/UnPoilTefal/kmgr/internal/config"
+	"github.com/UnPoilTefal/kmgr/internal/normalize"
 )
 
 var checkCmd = &cobra.Command{
@@ -121,26 +121,16 @@ func runCheck(_ *cobra.Command, _ []string) error {
 
 // printSourceCheck affiche le résultat d'un fichier source.
 func printSourceCheck(s config.SourceCheck) {
-	if aiMode {
-		// Compact : seules les anomalies sont listées.
-		for _, issue := range s.Issues {
-			fmt.Printf("source %s: %s\n", s.File, issue)
-		}
+	mode := outputMode()
+	fmt.Print(s.Render(mode, palette()))
+	if mode == config.AI || s.OK() {
 		return
 	}
-	if s.OK() {
-		fmt.Printf("  %s✓%s %s\n", green, reset, s.File)
-		return
+	if s.UnfixableReason != "" {
+		hint(fmt.Sprintf("kmgr fix (%s → mise en quarantaine)", s.UnfixableReason))
+	} else {
+		hint("kmgr fix")
 	}
-	fmt.Printf("  %s✗%s %s", red, reset, s.File)
-	if s.Server != "" {
-		fmt.Printf("  %s%s%s", dim, s.Server, reset)
-	}
-	fmt.Println()
-	for _, issue := range s.Issues {
-		fmt.Printf("      %s⚠%s  %s\n", yellow, reset, issue)
-	}
-	hint("kmgr fix")
 	fmt.Println()
 }
 
@@ -167,60 +157,25 @@ func printTargetCheck(t config.TargetCheck) {
 
 // printContextCheck affiche un contexte du fichier cible.
 func printContextCheck(c config.ContextCheck) {
-	if aiMode {
-		// Une ligne par contexte : état + détail éventuel.
-		state := "ok"
-		switch {
-		case len(c.Issues) > 0:
-			state = fmt.Sprintf("invalid (%v)", c.Issues[0])
-		case !c.Reachable:
-			state = fmt.Sprintf("unreachable (%s)", c.ReachErr)
-		case !c.Authenticated:
-			state = fmt.Sprintf("auth failed (%s)", c.AuthErr)
-		}
-		fmt.Printf("%s: %s\n", c.ContextName, state)
+	mode := outputMode()
+	fmt.Print(c.Render(mode, palette()))
+	if mode == config.AI {
 		return
-	}
-
-	hasIssues := len(c.Issues) > 0
-
-	switch {
-	case !hasIssues && c.Reachable && c.Authenticated:
-		fmt.Printf("  %s✓%s %s", green, reset, c.ContextName)
-	case !hasIssues && c.Reachable && !c.Authenticated:
-		fmt.Printf("  %s⚠%s %s", yellow, reset, c.ContextName)
-	default:
-		fmt.Printf("  %s✗%s %s", red, reset, c.ContextName)
-	}
-	if c.Server != "" {
-		fmt.Printf("  %s%s%s", dim, c.Server, reset)
-	}
-	fmt.Println()
-
-	for _, issue := range c.Issues {
-		fmt.Printf("      %s⚠%s  %s\n", yellow, reset, issue)
 	}
 	if len(c.Issues) > 0 {
 		hint("kmgr merge")
 	}
-
-	switch {
-	case !c.Reachable:
-		fmt.Printf("      %s✗%s  non joignable : %s%s%s\n", red, reset, dim, c.ReachErr, reset)
-	case !c.Authenticated:
-		fmt.Printf("      %s⚠%s  joignable — authentification échouée : %s%s%s\n", yellow, reset, dim, c.AuthErr, reset)
+	if c.Reachable && !c.Authenticated {
 		hint(importHint(c.ContextName))
-	default:
-		fmt.Printf("      %s✓%s  joignable et authentifié\n", green, reset)
 	}
 	fmt.Println()
 }
 
 // importHint retourne la commande import --force avec user et cluster dérivés du contexte.
 func importHint(ctxName string) string {
-	at := strings.LastIndex(ctxName, "@")
-	if at < 0 {
+	identity, ok := normalize.Parse(ctxName)
+	if !ok {
 		return "kmgr import --force -u <user> -c <cluster>"
 	}
-	return fmt.Sprintf("kmgr import --force -u %s -c %s", ctxName[:at], ctxName[at+1:])
+	return fmt.Sprintf("kmgr import --force -u %s -c %s", identity.User(), identity.Cluster())
 }

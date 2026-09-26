@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/UnPoilTefal/kmgr/internal/config"
+	"github.com/UnPoilTefal/kmgr/internal/normalize"
 )
 
 var removeCmd = &cobra.Command{
@@ -24,16 +25,13 @@ func runRemove(_ *cobra.Command, args []string) error {
 	ctxName := args[0]
 	section(fmt.Sprintf("Suppression : %s", ctxName))
 
-	// Derive user and cluster from "user@cluster".
-	at := strings.Index(ctxName, "@")
-	if at < 0 {
+	identity, valid := normalize.Parse(ctxName)
+	if !valid {
 		return fmt.Errorf("format attendu : <user>@<cluster>, reçu : %s", ctxName)
 	}
-	user := ctxName[:at]
-	cluster := ctxName[at+1:]
 
 	_, configsDir, _ := config.Dirs()
-	targetFile := filepath.Join(configsDir, fmt.Sprintf("kubeconfig_%s@%s.yaml", user, cluster))
+	targetFile := filepath.Join(configsDir, identity.SourceFilename())
 
 	if _, err := os.Stat(targetFile); os.IsNotExist(err) {
 		return fmt.Errorf("fichier non trouvé : %s", targetFile)

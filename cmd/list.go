@@ -2,13 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"path/filepath"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/UnPoilTefal/kmgr/internal/config"
-	"github.com/UnPoilTefal/kmgr/internal/normalize"
 )
 
 var listCmd = &cobra.Command{
@@ -20,28 +17,21 @@ var listCmd = &cobra.Command{
 func runList(_ *cobra.Command, _ []string) error {
 	section("Kubeconfigs gérés")
 
-	_, configsDir, _ := config.Dirs()
-	files, err := filepath.Glob(filepath.Join(configsDir, "kubeconfig_*.yaml"))
+	contexts, err := config.ManagedContexts()
 	if err != nil {
 		return err
 	}
-	if len(files) == 0 {
+	if len(contexts) == 0 {
 		warn("Aucun kubeconfig importé. Lance : kmgr import -f <fichier> -u <user> -c <cluster>")
 		return nil
 	}
 
-	currentCtx := config.CurrentContext()
+	mode := outputMode()
+	p := palette()
 
-	// Mode IA : un contexte par ligne, '*' marque le contexte actif.
-	// Le cluster et le fichier sont dérivables du nom de contexte.
-	if aiMode {
-		for _, f := range files {
-			ctx := normalize.ContextFromFile(f)
-			marker := "  "
-			if ctx == currentCtx {
-				marker = "* "
-			}
-			fmt.Println(marker + ctx)
+	if mode == config.AI {
+		for _, c := range contexts {
+			fmt.Print(c.Render(mode, p))
 		}
 		return nil
 	}
@@ -49,23 +39,12 @@ func runList(_ *cobra.Command, _ []string) error {
 	fmt.Printf("  %-40s %-20s %s\n", "CONTEXTE", "CLUSTER", "FICHIER")
 	fmt.Printf("  %-40s %-20s %s\n", "--------", "-------", "-------")
 
-	for _, f := range files {
-		ctx := normalize.ContextFromFile(f)
-		// ctx is "user@cluster" — take part after "@".
-		cluster := ctx
-		if at := strings.Index(ctx, "@"); at >= 0 {
-			cluster = ctx[at+1:]
-		}
-		fname := filepath.Base(f)
-		if ctx == currentCtx {
-			fmt.Printf("  %s✓%s %-40s %-20s %s%s%s\n", green, reset, ctx, cluster, dim, fname, reset)
-		} else {
-			fmt.Printf("  %-40s %-20s %s\n", ctx, cluster, fname)
-		}
+	for _, c := range contexts {
+		fmt.Print(c.Render(mode, p))
 	}
 
 	fmt.Println()
-	fmt.Printf("%sContexte actif : %s%s%s\n", dim, reset+bold, orNone(currentCtx), reset)
+	fmt.Printf("%sContexte actif : %s%s%s\n", dim, reset+bold, orNone(config.CurrentContext()), reset)
 	return nil
 }
 

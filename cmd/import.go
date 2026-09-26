@@ -102,21 +102,18 @@ func runImport(_ *cobra.Command, _ []string) error {
 		ok("Fichier kubeconfig valide")
 	}
 
-	user := normalize.Name(importUser)
-	cluster := normalize.Name(importCluster)
-	ctxName := importCtx
-	if ctxName == "" {
-		ctxName = user + "@" + cluster
+	identity := normalize.New(importUser, importCluster)
+	contextKey := importCtx
+	if contextKey == "" {
+		contextKey = identity.String()
 	}
-	// AuthInfo est namespaced par cluster pour éviter les collisions au merge.
-	authInfo := user + "@" + cluster
 
 	_, configsDir, _ := config.Dirs()
 	if err := os.MkdirAll(configsDir, 0700); err != nil {
 		return err
 	}
 
-	destFile := filepath.Join(configsDir, fmt.Sprintf("kubeconfig_%s@%s.yaml", user, cluster))
+	destFile := filepath.Join(configsDir, identity.SourceFilename())
 
 	if _, err := os.Stat(destFile); err == nil {
 		if !importForce {
@@ -129,25 +126,25 @@ func runImport(_ *cobra.Command, _ []string) error {
 		info(fmt.Sprintf("Backup créé : %s", bak))
 	}
 
-	section(fmt.Sprintf("Import : %s", ctxName))
+	section(fmt.Sprintf("Import : %s", contextKey))
 	info("Normalisation des noms (contexte, cluster, user)...")
 
-	oldCtx, oldCluster, oldUser, err := config.NormalizeAndWrite(srcFile, destFile, ctxName, cluster, authInfo)
+	oldCtx, oldCluster, oldUser, err := config.NormalizeAndWrite(srcFile, destFile, identity, contextKey)
 	if err != nil {
 		return err
 	}
 
 	if aiMode {
-		ifVerbose(fmt.Sprintf("imported: %s (était %s) -> %s\n", ctxName, oldCtx, destFile))
+		ifVerbose(fmt.Sprintf("imported: %s (était %s) -> %s\n", contextKey, oldCtx, destFile))
 		return runMergeInternal()
 	}
 
 	fmt.Printf("  %sancien contexte%s : %s\n", dim, reset, oldCtx)
 	fmt.Printf("  %sancien cluster %s : %s\n", dim, reset, oldCluster)
 	fmt.Printf("  %sancien user    %s : %s\n", dim, reset, oldUser)
-	fmt.Printf("  %s→%s contexte      : %s%s%s\n", green, reset, bold, ctxName, reset)
-	fmt.Printf("  %s→%s cluster       : %s\n", green, reset, cluster)
-	fmt.Printf("  %s→%s user          : %s\n", green, reset, authInfo)
+	fmt.Printf("  %s→%s contexte      : %s%s%s\n", green, reset, bold, contextKey, reset)
+	fmt.Printf("  %s→%s cluster       : %s\n", green, reset, identity.Cluster())
+	fmt.Printf("  %s→%s user          : %s\n", green, reset, identity.AuthInfo())
 	fmt.Printf("  %s→%s fichier       : %s%s%s\n", green, reset, dim, destFile, reset)
 
 	ok("Import terminé")

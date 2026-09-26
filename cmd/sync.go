@@ -81,27 +81,14 @@ func runSyncStatus(_ *cobra.Command, _ []string) error {
 		return nil
 	}
 
+	mode := outputMode()
+	p := palette()
 	stale := 0
 	for _, t := range targets {
 		state, err := config.CheckMirror(t)
-		if aiMode {
-			fmt.Printf("mirror: %s %s\n", t, state)
-			if state != config.MirrorInSync {
-				stale++
-			}
-			continue
-		}
-		switch state {
-		case config.MirrorInSync:
-			fmt.Printf("  %s✓%s %s %s(à jour)%s\n", green, reset, t, dim, reset)
-		case config.MirrorStale:
-			fmt.Printf("  %s⚠%s %s %s(obsolète)%s\n", yellow, reset, t, dim, reset)
-			stale++
-		case config.MirrorMissing:
-			fmt.Printf("  %s⚠%s %s %s(absent)%s\n", yellow, reset, t, dim, reset)
-			stale++
-		default:
-			fmt.Printf("  %s✗%s %s %s(%v)%s\n", red, reset, t, dim, err, reset)
+		entry := config.MirrorStatusEntry{Target: t, State: state, Err: err}
+		fmt.Print(entry.Render(mode, p))
+		if state != config.MirrorInSync {
 			stale++
 		}
 	}

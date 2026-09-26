@@ -116,6 +116,27 @@ func ifVerbose(s string) {
 	}
 }
 
+// outputMode reports the current rendering mode for config.*.Render calls.
+func outputMode() config.OutputMode {
+	if aiMode {
+		return config.AI
+	}
+	return config.Human
+}
+
+// palette reports the current colors for config.*.Render calls — colors are
+// already blanked by initColors() when NO_COLOR/quiet/ai mode is active.
+func palette() config.Palette {
+	return config.Palette{
+		Reset:  reset,
+		Red:    red,
+		Yellow: yellow,
+		Green:  green,
+		Dim:    dim,
+		Bold:   bold,
+	}
+}
+
 // warnEnvDesync affiche un avertissement si KUBECONFIG ne pointe pas vers
 // le fichier mergé géré par kmgr (désynchro entre env et KMGR_DIR).
 func warnEnvDesync() {

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/UnPoilTefal/kmgr/internal/config"
+	"github.com/UnPoilTefal/kmgr/internal/normalize"
 )
 
 var renameCmd = &cobra.Command{
@@ -25,20 +25,18 @@ func runRename(_ *cobra.Command, args []string) error {
 
 	section(fmt.Sprintf("Renommage : %s → %s", oldCtx, newCtx))
 
-	// Validate old context format.
-	if !strings.Contains(oldCtx, "@") {
+	oldIdentity, valid := normalize.Parse(oldCtx)
+	if !valid {
 		return fmt.Errorf("format attendu : <user>@<cluster>, reçu : %s", oldCtx)
 	}
-
-	// Validate new context format.
-	at := strings.Index(newCtx, "@")
-	if at < 0 {
+	newIdentity, valid := normalize.Parse(newCtx)
+	if !valid {
 		return fmt.Errorf("format attendu : <user>@<cluster>, reçu : %s", newCtx)
 	}
 
 	_, configsDir, _ := config.Dirs()
-	oldFile := filepath.Join(configsDir, fmt.Sprintf("kubeconfig_%s.yaml", oldCtx))
-	newFile := filepath.Join(configsDir, fmt.Sprintf("kubeconfig_%s.yaml", newCtx))
+	oldFile := filepath.Join(configsDir, oldIdentity.SourceFilename())
+	newFile := filepath.Join(configsDir, newIdentity.SourceFilename())
 
 	// Source must exist.
 	if _, err := os.Stat(oldFile); os.IsNotExist(err) {
@@ -50,9 +48,7 @@ func runRename(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("le fichier de destination existe déjà : %s", newFile)
 	}
 
-	newCluster := newCtx[at+1:]
-	// AuthInfo is namespaced as the full context name.
-	if _, _, _, err := config.NormalizeAndWrite(oldFile, newFile, newCtx, newCluster, newCtx); err != nil {
+	if _, _, _, err := config.NormalizeAndWrite(oldFile, newFile, newIdentity, newIdentity.String()); err != nil {
 		return fmt.Errorf("erreur lors de la normalisation : %w", err)
 	}
 

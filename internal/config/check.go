@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"time"
 
 	"k8s.io/client-go/rest"
@@ -41,6 +40,10 @@ type SourceCheck struct {
 	UserName    string  // user name found inside the file
 	Server      string  // server URL
 	Issues      []Issue // naming convention + permission problems
+
+	// UnfixableReason explains why `kmgr fix` cannot repair this file
+	// automatically (it must be quarantined instead). Empty when fixable.
+	UnfixableReason string
 }
 
 func (c *SourceCheck) OK() bool { return len(c.Issues) == 0 }
@@ -65,6 +68,7 @@ func checkSourceFile(path string) SourceCheck {
 	cfg, err := clientcmd.LoadFromFile(path)
 	if err != nil {
 		r.Issues = append(r.Issues, Issue{Field: "parse", Got: err.Error()})
+		r.UnfixableReason = "contenu non parseable"
 		return r
 	}
 
@@ -87,19 +91,21 @@ func checkSourceFile(path string) SourceCheck {
 	}
 
 	// Naming convention: context / cluster / user must match filename.
-	expectedCtx := normalize.ContextFromFile(path)
-	if ctxKey != expectedCtx {
-		r.Issues = append(r.Issues, Issue{Field: "context", Got: ctxKey, Want: expectedCtx})
-	}
-	if ctx != nil && strings.Contains(expectedCtx, "@") {
-		// AuthInfo est namespaced : deschampsf@ctain-d-00, identique au nom du contexte.
-		// Le cluster est la partie après le dernier @.
-		expectedCluster := expectedCtx[strings.LastIndex(expectedCtx, "@")+1:]
-		if ctx.Cluster != expectedCluster {
-			r.Issues = append(r.Issues, Issue{Field: "cluster", Got: ctx.Cluster, Want: expectedCluster})
+	expected, ok := normalize.FromFilename(path)
+	if !ok {
+		r.UnfixableReason = "nom de fichier non conforme (attendu kubeconfig_{user}@{cluster}.yaml)"
+		r.Issues = append(r.Issues, Issue{Field: "filename", Got: r.File})
+	} else {
+		if ctxKey != expected.String() {
+			r.Issues = append(r.Issues, Issue{Field: "context", Got: ctxKey, Want: expected.String()})
 		}
-		if ctx.AuthInfo != expectedCtx {
-			r.Issues = append(r.Issues, Issue{Field: "user", Got: ctx.AuthInfo, Want: expectedCtx})
+		if ctx != nil {
+			if ctx.Cluster != expected.Cluster() {
+				r.Issues = append(r.Issues, Issue{Field: "cluster", Got: ctx.Cluster, Want: expected.Cluster()})
+			}
+			if ctx.AuthInfo != expected.AuthInfo() {
+				r.Issues = append(r.Issues, Issue{Field: "user", Got: ctx.AuthInfo, Want: expected.AuthInfo()})
+			}
 		}
 	}
 
