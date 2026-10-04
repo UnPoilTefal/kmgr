@@ -88,3 +88,4 @@ dockers_v2:
       org.opencontainers.image.source: "https://github.com/UnPoilTefal/kmgr"
       org.opencontainers.image.version: "{{ .Version }}"
       org.opencontainers.image.licenses: "MIT"
+# test night-shift #30 : PR à fermer
