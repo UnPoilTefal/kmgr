@@ -1,0 +1,23 @@
+name: night-shift
+
+on:
+  # pull_request_target exécute ce workflow tel qu'il est sur la branche de base :
+  # une PR d'agent ne peut pas réécrire le job qui la juge. Sans risque ici, car
+  # le check n'exécute jamais le code de la PR, il ne lit que des objets git.
+  # Ne jamais ajouter d'étape qui build ou exécute le code de la PR.
+  pull_request_target:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  zones:
+    name: Zone check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # le check a besoin de la base et de la merge-base
+
+      - uses: UnPoilTefal/night-shift/actions/zone-check@85fa40030dd3fac8b0f8b1dcb36435d07d65424c # v0.1.0

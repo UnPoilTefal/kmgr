@@ -1,0 +1,24 @@
+# Adhésion night-shift : kmgr est le dépôt pilote des passes nocturnes.
+# Schéma : https://github.com/UnPoilTefal/night-shift/blob/main/docs/opt-in.md
+# Ce fichier (.night-shift/**) est une zone interdite implicite : seul un humain le modifie.
+version: 1
+
+trustLevel:
+  ticketsPerPass: 1
+  pullRequests: draft
+
+toolImage: ghcr.io/unpoiltefal/night-shift-go:0.1.0
+
+trustedAuthors:
+  - UnPoilTefal
+
+forbiddenZones:
+  - ".github/**"
+  - ".goreleaser.yml"
+  - "CLAUDE.md"
+  - "CONTEXT.md"
+  - "docs/agents/**"
+
+sensitiveZones:
+  - path: go.mod
+    kind: go-dependencies
