@@ -42,9 +42,9 @@ make test
    ```bash
    make check  # Run tests and linters
    ```
-5. **Commit** with clear, descriptive messages:
+5. **Commit** with a [gitmoji](https://gitmoji.dev) prefix (see [Commit Messages](#commit-messages)):
    ```bash
-   git commit -m "Add feature: description"
+   git commit -m ":sparkles: add feature X"
    ```
 6. **Push** to your fork:
    ```bash
@@ -92,15 +92,16 @@ Any code changes must respect and maintain this convention.
 
 ## Commit Messages
 
-Use clear, descriptive commit messages:
+Prefix every commit message with a [gitmoji](https://gitmoji.dev) code, followed by a clear, descriptive summary:
 
 ```
-feat: add feature X
-fix: resolve issue with Y
-docs: update README
-test: add tests for Z
-chores: update dependencies
-refactor: improve code structure
+:sparkles: add feature X
+:bug: resolve issue with Y
+:memo: update README
+:white_check_mark: add tests for Z
+:arrow_up: update dependencies
+:recycle: improve code structure
+:wrench: update configuration
 ```
 
 ---
@@ -111,7 +112,7 @@ refactor: improve code structure
 - Include tests for new functionality
 - Update README if user-facing changes
 - Reference issues: "Closes #123"
-- Keep commits clean and squash if needed
+- Keep commits clean: PRs are merged by rebase, so each commit lands on `main` as is
 
 ---
 
