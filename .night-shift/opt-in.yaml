@@ -16,7 +16,7 @@ forbiddenZones:
   - ".github/**"
   - ".goreleaser.yml"
   - "CLAUDE.md"
-  - "CONTEXT.md"
+  - "GLOSSARY.md"
   - "docs/agents/**"
 
 sensitiveZones:
