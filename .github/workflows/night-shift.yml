@@ -20,4 +20,4 @@ jobs:
         with:
           fetch-depth: 0 # le check a besoin de la base et de la merge-base
 
-      - uses: UnPoilTefal/night-shift/actions/zone-check@85fa40030dd3fac8b0f8b1dcb36435d07d65424c # v0.1.0
+      - uses: UnPoilTefal/night-shift/actions/zone-check@18a04e8e6e29973206c2347e9d5e9247e9dec439 # v0.5.0
